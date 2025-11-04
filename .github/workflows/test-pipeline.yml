@@ -1,4 +1,4 @@
-name: AI-Powered Testing Pipeline
+name: AI-Powered Playwright MCP Test Suite
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  ai-testing:
+  run-ai-playwright-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,39 +18,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install dependencies
         run: |
-          echo "Installing npm packages..."
+          npm init -y
           npm install playwright @playwright/test
-          echo "Setting up Playwright permissions..."
-          chmod +x node_modules/.bin/playwright || true
-          chmod +x node_modules/.bin/playwright-core || true
-          echo "Installing system dependencies..."
-          sudo npx playwright install-deps chromium
-          echo "Installing Chromium browser..."
           npx playwright install chromium
-          echo "Verifying installation..."
-          npx playwright --version
+          npm install @playwright/mcp
 
-      - name: Execute AI-Powered Tests
+      - name: Start Playwright MCP server
+        run: |
+          echo "🚀 Starting Playwright MCP server..."
+          nohup npx @playwright/mcp server > mcp.log 2>&1 &
+          sleep 8
+          echo "✅ MCP server started"
+
+      - name: Run AI Test Executor (Claude)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          echo "🤖 Running AI Test Runner..."
-          node tools/ai-test-runner.js
+          echo "🧠 Sending test suite to Claude via MCP..."
+          npx @playwright/mcp exec --model claude-3-5-sonnet \
+          --input-file Testsuite.md \
+          --output-file reports/test-execution-report.html
 
-      - name: Upload Test Reports
+      - name: Upload HTML Test Report
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: test-reports
-          path: reports/
-
-      - name: Upload Screenshots
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: failure-screenshots
-          path: reports/*.png
+          name: playwright-mcp-test-report
+          path: reports/test-execution-report.html
