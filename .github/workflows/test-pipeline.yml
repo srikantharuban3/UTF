@@ -12,16 +12,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
       - name: Install dependencies
         run: |
-          npm init -y
-          npm install playwright @playwright/test @playwright/mcp node-fetch
-          npx playwright install
-
-      - name: Start Playwright MCP Server
-        run: |
-          npx @playwright/mcp server &
-          sleep 5
+          npm install playwright @playwright/test
+          npx playwright install chromium --with-deps
 
       - name: Execute AI-Powered Tests
         env:
