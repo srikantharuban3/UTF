@@ -40,22 +40,22 @@ jobs:
         run: |
           echo "🧠 Sending test suite to Claude via MCP..."
     
-          # Ensure output directory exists
+          # Ensure report folder exists
           mkdir -p reports
 
-          # The CLI now reads default files automatically
-          # So we copy our test suite into the default expected input path
+          # The MCP CLI expects a default file named input.md
           cp Testsuite.md input.md
 
-          # Run MCP with no extra arguments
-          npx @playwright/mcp run
+          # Run the MCP (no arguments allowed)
+          npx @playwright/mcp
 
-          # Move the default output report to desired location
+          # Move the generated output file to reports folder
           if [ -f "output.html" ]; then
-          mv output.html reports/test-execution-report.html
+            mv output.html reports/test-execution-report.html
           fi
 
-          echo "✅ Test Execution Report generated: reports/test-execution-report.html"
+          echo "✅ Test Execution Report generated at reports/test-execution-report.html"
+
 
 
 
