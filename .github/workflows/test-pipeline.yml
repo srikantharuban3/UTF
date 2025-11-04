@@ -22,8 +22,17 @@ jobs:
 
       - name: Install dependencies
         run: |
+          echo "Installing npm packages..."
           npm install playwright @playwright/test
-          npx playwright install chromium --with-deps
+          echo "Setting up Playwright permissions..."
+          chmod +x node_modules/.bin/playwright || true
+          chmod +x node_modules/.bin/playwright-core || true
+          echo "Installing system dependencies..."
+          sudo npx playwright install-deps chromium
+          echo "Installing Chromium browser..."
+          npx playwright install chromium
+          echo "Verifying installation..."
+          npx playwright --version
 
       - name: Execute AI-Powered Tests
         env:
