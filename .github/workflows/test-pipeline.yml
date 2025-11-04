@@ -51,10 +51,10 @@ jobs:
 
           # Move the generated output file to reports folder
           if [ -f "output.html" ]; then
-            mv output.html reports/test-execution-report.html
+            mv output.html test-execution-report.html
           fi
 
-          echo "✅ Test Execution Report generated at reports/test-execution-report.html"
+          echo "✅ Test Execution Report generated at test-execution-report.html"
 
 
 
