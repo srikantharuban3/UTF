@@ -22,8 +22,8 @@ jobs:
       - name: Install dependencies
         run: |
           npm init -y
-          npm install playwright @playwright/test
-          npx playwright install chromium
+          npm install playwright @playwright/test @playwright/mcp node-fetch
+          npx playwright install --with-deps chromium
           npm install @playwright/mcp
 
       - name: Start Playwright MCP server
