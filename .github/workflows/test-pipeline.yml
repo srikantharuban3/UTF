@@ -1,29 +1,27 @@
-name: AI-Powered Testing Pipeline
+name: AI Playwright Tests
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
 
 jobs:
-  ai-testing:
+  test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Install dependencies
         run: |
           npm init -y
-          npm install playwright @playwright/test
-          npx playwright install chromium
+          npm install playwright @playwright/test @playwright/mcp node-fetch
+          npx playwright install
+
+      - name: Start Playwright MCP Server
+        run: |
+          npx @playwright/mcp server &
+          sleep 5
 
       - name: Execute AI-Powered Tests
         env:
