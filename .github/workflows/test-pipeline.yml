@@ -37,11 +37,11 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           MCP_MODEL: claude-3-5-sonnet
-          MCP_SERVER_URL: http://mcp-server:5002
         run: |
           echo "🧠 Sending test suite to Claude via MCP..."
-          npx @playwright/mcp run Testsuite.md reports/test-execution-report.html --server $MCP_SERVER_URL
+          npx @playwright/mcp run Testsuite.md reports/test-execution-report.html
           echo "✅ Test Execution Report generated at reports/test-execution-report.html"
+
 
       - name: Upload HTML Test Report
         uses: actions/upload-artifact@v4
