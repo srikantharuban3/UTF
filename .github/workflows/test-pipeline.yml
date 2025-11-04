@@ -46,26 +46,80 @@ jobs:
           # Copy Testsuite.md as input.md for MCP
           cp Testsuite.md input.md
 
-          # Execute Playwright MCP and capture output into HTML report
-          echo "⏳ Executing test suite through MCP..."
-          npx @playwright/mcp > mcp.log 2>&1 || true
+          # Run MCP and capture full logs
+          npx @playwright/mcp > mcp_output.log 2>&1 || true
 
-          # Convert MCP log into minimal HTML report
-          if grep -q "Error" mcp.log; then
+          echo "🧩 Parsing MCP output..."
+          TOTAL=$(grep -Eic "test case" mcp_output.log || echo 0)
+          PASSED=$(grep -Eic "pass|successful" mcp_output.log || echo 0)
+          FAILED=$(grep -Eic "fail|error|assertion" mcp_output.log || echo 0)
+          TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+
+          # Decide job status (for pipeline)
+          if [ "$FAILED" -gt 0 ]; then
             STATUS="❌ FAILED"
-          else
+            EXITCODE=1
+          elif [ "$PASSED" -gt 0 ]; then
             STATUS="✅ PASSED"
+            EXITCODE=0
+          else
+            STATUS="⚠️ NO TEST RESULTS"
+            EXITCODE=2
           fi
 
-          echo "<html><head><title>MCP Test Report</title></head><body>" > reports/test-execution-report.html
-          echo "<h1>AI Test Execution Report</h1>" >> reports/test-execution-report.html
-          echo "<p><strong>Status:</strong> $STATUS</p>" >> reports/test-execution-report.html
-          echo "<pre>" >> reports/test-execution-report.html
-          cat mcp.log >> reports/test-execution-report.html
-          echo "</pre></body></html>" >> reports/test-execution-report.html
+          echo "📊 Generating AI Test Execution HTML report..."
+          REPORT="reports/test-execution-report.html"
 
-          echo "✅ Test Execution Report generated at reports/test-execution-report.html"
-          ls -la reports
+          # Create detailed HTML report
+          cat <<EOF > $REPORT
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>AI Test Execution Report</title>
+            <style>
+              body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; }
+              h1 { color: #333; }
+              .status { font-size: 20px; margin-bottom: 10px; }
+              .summary { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+              pre { background: #222; color: #eee; padding: 10px; border-radius: 6px; overflow-x: auto; }
+              canvas { margin-top: 15px; }
+            </style>
+          </head>
+          <body>
+            <h1>AI Test Execution Report</h1>
+            <div class="summary">
+              <p class="status"><strong>Status:</strong> $STATUS</p>
+              <p><strong>Total:</strong> $TOTAL</p>
+              <p><strong>Passed:</strong> $PASSED</p>
+              <p><strong>Failed:</strong> $FAILED</p>
+              <p><strong>Executed At:</strong> $TIMESTAMP</p>
+              <canvas id="chart" width="400" height="200"></canvas>
+            </div>
+
+            <h3>Execution Log</h3>
+            <pre>$(head -n 100 mcp_output.log)</pre>
+
+            <script>
+              const ctx = document.getElementById('chart').getContext('2d');
+              const data = {
+                labels: ['Passed', 'Failed'],
+                datasets: [{
+                  label: 'Test Summary',
+                  data: [$PASSED, $FAILED],
+                  backgroundColor: ['#4CAF50', '#E74C3C']
+                }]
+              };
+              new Chart(ctx, { type: 'bar', data });
+            </script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          </body>
+          </html>
+          EOF
+
+          echo "✅ HTML report generated at $REPORT"
+          echo "🧾 STATUS: $STATUS"
+
+          exit $EXITCODE
 
       - name: Upload HTML Test Report
         uses: actions/upload-artifact@v4
