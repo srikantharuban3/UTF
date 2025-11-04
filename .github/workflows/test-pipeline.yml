@@ -51,7 +51,7 @@ jobs:
 
           # Move the generated output file to reports folder
           if [ -f "output.html" ]; then
-            mv output.html reports/test-execution-report.html
+            mv output.html test-execution-report.html
           fi
 
           echo "✅ Test Execution Report generated at test-execution-report.html"
@@ -63,4 +63,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-mcp-test-report
-          path: reports/test-execution-report.html
+          path: test-execution-report.html
