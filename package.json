@@ -1,0 +1,38 @@
+{
+  "name": "ai-powered-testing-pipeline",
+  "version": "1.0.0",
+  "description": "AI-powered CI/CD testing pipeline using Playwright and Claude AI for ParaBank registration testing",
+  "main": "tools/ai-test-runner.js",
+  "scripts": {
+    "test": "node tools/ai-test-runner.js",
+    "test:local": "node tools/ai-test-runner.js",
+    "install:browsers": "npx playwright install chromium"
+  },
+  "keywords": [
+    "ai",
+    "testing",
+    "playwright", 
+    "claude",
+    "ci-cd",
+    "automation",
+    "parabank"
+  ],
+  "author": "AI Testing Team",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "@playwright/test": "^1.40.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/ai-testing-pipeline.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/ai-testing-pipeline/issues"
+  },
+  "homepage": "https://github.com/username/ai-testing-pipeline#readme"
+}
