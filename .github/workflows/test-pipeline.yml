@@ -1,0 +1,49 @@
+name: AI-Powered Playwright MCP Test Suite
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-ai-playwright-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          npm init -y
+          npm install playwright @playwright/test
+          npx playwright install chromium
+          npm install @playwright/mcp
+
+      - name: Start Playwright MCP server
+        run: |
+          echo "🚀 Starting Playwright MCP server..."
+          nohup npx @playwright/mcp server > mcp.log 2>&1 &
+          sleep 8
+          echo "✅ MCP server started"
+
+      - name: Run AI Test Executor (Claude)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo "🧠 Sending test suite to Claude via MCP..."
+          npx @playwright/mcp exec --model claude-3-5-sonnet \
+          --input-file Testsuite.md \
+          --output-file reports/test-execution-report.html
+
+      - name: Upload HTML Test Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-mcp-test-report
+          path: reports/test-execution-report.html
