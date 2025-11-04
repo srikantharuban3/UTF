@@ -33,14 +33,30 @@ jobs:
           sleep 8
           echo "✅ MCP server started"
 
-      - name: 🧠 Run AI Test Suite with Claude via MCP
+      - name: 🧠 Run AI Test Suite via Playwright MCP
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           MCP_MODEL: claude-3-5-sonnet
         run: |
           echo "🧠 Sending test suite to Claude via MCP..."
-          npx @playwright/mcp run Testsuite.md reports/test-execution-report.html
-          echo "✅ Test Execution Report generated at reports/test-execution-report.html"
+    
+          # Ensure output directory exists
+          mkdir -p reports
+
+          # The CLI now reads default files automatically
+          # So we copy our test suite into the default expected input path
+          cp Testsuite.md input.md
+
+          # Run MCP with no extra arguments
+          npx @playwright/mcp run
+
+          # Move the default output report to desired location
+          if [ -f "output.html" ]; then
+          mv output.html reports/test-execution-report.html
+          fi
+
+          echo "✅ Test Execution Report generated: reports/test-execution-report.html"
+
 
 
       - name: Upload HTML Test Report
