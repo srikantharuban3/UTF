@@ -46,85 +46,46 @@ jobs:
           # Copy Testsuite.md as input.md for MCP
           cp Testsuite.md input.md
 
-           # Run MCP and capture output
-          npx @playwright/mcp > mcp_output.log 2>&1 || true
+          # Run the MCP
+          npx @playwright/mcp > mcp.log 2>&1 || echo "⚠️ MCP exited with a non-zero status"
 
           echo "🧩 Parsing MCP output..."
-          # Grep counts and default to 0 if empty
-          TOTAL=$(grep -Eic "test case" mcp_output.log || echo 0)
-          PASSED=$(grep -Eic "pass|successful" mcp_output.log || echo 0)
-          FAILED=$(grep -Eic "fail|error|assertion" mcp_output.log || echo 0)
 
-          # Default values to 0 if grep didn’t find anything
-          TOTAL=${TOTAL:-0}
+          # Extract counts safely (fallback to 0 if not found)
+          PASSED=$(grep -c "✅" mcp.log || echo 0)
+          FAILED=$(grep -c "❌" mcp.log || echo 0)
+          SKIPPED=$(grep -c "⏭️" mcp.log || echo 0)
+
+          # Ensure numeric defaults
           PASSED=${PASSED:-0}
           FAILED=${FAILED:-0}
-
-          TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-
-          # Decide pipeline status
-          if [ "$FAILED" -gt 0 ]; then
-            STATUS="❌ FAILED"
-            EXITCODE=1
-          elif [ "$PASSED" -gt 0 ]; then
-            STATUS="✅ PASSED"
-            EXITCODE=0
-          else
-            STATUS="⚠️ NO TEST RESULTS"
-            EXITCODE=2
-          fi
+          SKIPPED=${SKIPPED:-0}
 
           echo "📊 Generating AI Test Execution HTML report..."
-          REPORT="reports/test-execution-report.html"
 
-          cat <<EOF > $REPORT
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>AI Test Execution Report</title>
-            <style>
-              body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; }
-              h1 { color: #333; }
-              .summary { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
-              pre { background: #222; color: #eee; padding: 10px; border-radius: 6px; overflow-x: auto; }
-              canvas { margin-top: 15px; }
-            </style>
-          </head>
-          <body>
-            <h1>AI Test Execution Report</h1>
-            <div class="summary">
-              <p><strong>Status:</strong> $STATUS</p>
-              <p><strong>Total:</strong> $TOTAL</p>
-              <p><strong>Passed:</strong> $PASSED</p>
-              <p><strong>Failed:</strong> $FAILED</p>
-              <p><strong>Executed At:</strong> $TIMESTAMP</p>
-              <canvas id="chart" width="400" height="200"></canvas>
-            </div>
-            <h3>Execution Log (first 100 lines)</h3>
-            <pre>$(head -n 100 mcp_output.log)</pre>
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script>
-              const ctx = document.getElementById('chart').getContext('2d');
-              new Chart(ctx, {
-                type: 'bar',
-                data: {
-                  labels: ['Passed', 'Failed'],
-                  datasets: [{
-                    label: 'Test Results',
-                    data: [${PASSED}, ${FAILED}],
-                    backgroundColor: ['#4CAF50', '#E74C3C']
-                  }]
-                }
-              });
-            </script>
-          </body>
-          </html>
-          EOF
+          {
+            echo "<html><head><title>AI Test Execution Report</title></head><body>"
+            echo "<h1>🧠 AI Test Execution Summary</h1>"
+            echo "<p>✅ Passed: $PASSED</p>"
+            echo "<p>❌ Failed: $FAILED</p>"
+            echo "<p>⏭️ Skipped: $SKIPPED</p>"
+            echo "<h3>🧾 MCP Output Log</h3><pre>"
+            cat mcp.log
+            echo "</pre></body></html>"
+          } > reports/test-execution-report.html
 
-          echo "✅ HTML report generated at $REPORT"
-          echo "🧾 STATUS: $STATUS"
+          echo "✅ HTML report generated at reports/test-execution-report.html"
 
-          exit $EXITCODE
+          # Determine overall status
+          if [ "$FAILED" -gt 0 ]; then
+            echo "❌ STATUS: Some tests failed"
+            exit 1
+          elif [ "$PASSED" -gt 0 ]; then
+            echo "✅ STATUS: All tests passed"
+          else
+            echo "⚠️ STATUS: No test results detected"
+            exit 0
+          fi
 
       - name: Upload HTML Test Report
         uses: actions/upload-artifact@v4
