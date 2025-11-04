@@ -26,3 +26,12 @@
 - user name should be 10 charactors and should be unique.
 - submit the form by clicking on the register page. 
 - Verify that welcome message with the new username is displayed.
+
+## TC 002 - Verify user login functionality with valid credentials
+
+- Navigate to `https://parabank.parasoft.com/parabank/index.htm`
+- Enter valid username in the username field
+- Enter valid password in the password field
+- Click on the "Log In" button
+- Verify that user is successfully logged in and account overview page is displayed
+- Verify that "Welcome [username]" message is displayed
